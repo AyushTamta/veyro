@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [sendingSMS, setSendingSMS] = useState<string | null>(null);
   const [sendingWhatsApp, setSendingWhatsApp] = useState<string | null>(null);
+  const [triggeringRecovery, setTriggeringRecovery] = useState<string | null>(null);
 
   useEffect(() => {
     fetchClients();
@@ -58,10 +59,7 @@ export default function DashboardPage() {
     setLoading(false);
   };
 
-  const handleSendSMS = async (
-    phone: string,
-    fullName: string
-  ) => {
+  const handleSendSMS = async (phone: string, fullName: string) => {
     try {
       setSendingSMS(phone);
 
@@ -94,10 +92,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleSendWhatsApp = async (
-    phone: string,
-    fullName: string
-  ) => {
+  const handleSendWhatsApp = async (phone: string, fullName: string) => {
     try {
       setSendingWhatsApp(phone);
 
@@ -130,6 +125,43 @@ export default function DashboardPage() {
     }
   };
 
+  const handleRecoveryFlow = async (
+    phone: string,
+    fullName: string,
+    status: string
+  ) => {
+    try {
+      setTriggeringRecovery(phone);
+
+      const response = await fetch("/api/recovery", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone,
+          fullName,
+          status,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(result.message || "Recovery flow failed");
+        setTriggeringRecovery(null);
+        return;
+      }
+
+      alert(`Recovery flow triggered for ${fullName}`);
+      setTriggeringRecovery(null);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to trigger recovery flow");
+      setTriggeringRecovery(null);
+    }
+  };
+
   const getStatusStyle = (status?: string) => {
     if (status === "healthy") {
       return {
@@ -154,7 +186,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#F6F8FB] text-slate-900">
       <div className="mx-auto max-w-7xl space-y-8 px-8 py-8">
-        {/* HERO SECTION */}
+
         <section className="rounded-[32px] border border-slate-200 bg-white p-8 shadow-sm">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -179,7 +211,6 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* EXECUTIVE METRICS */}
         <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {[
             {
@@ -224,109 +255,99 @@ export default function DashboardPage() {
           ))}
         </section>
 
-        {/* MAIN GRID */}
         <section className="grid gap-6 lg:grid-cols-3">
-          {/* CLIENT CENTER */}
+
           <div className="lg:col-span-2 rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-8 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold text-slate-950">
-                  Priority Client Feed
-                </h2>
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold text-slate-950">
+                Priority Client Feed
+              </h2>
 
-                <p className="mt-2 text-sm text-slate-600">
-                  Live retention actions across your active clients
-                </p>
-              </div>
-
-              <button className="text-sm font-medium text-slate-700">
-                View all
-              </button>
+              <p className="mt-2 text-sm text-slate-600">
+                AI-guided retention actions across active clients
+              </p>
             </div>
 
             <div className="space-y-4">
               {loading ? (
-                <p className="text-slate-600">
-                  Loading clients...
-                </p>
-              ) : clients.length === 0 ? (
-                <p className="text-slate-600">
-                  No clients added yet.
-                </p>
+                <p>Loading clients...</p>
               ) : (
                 clients.map((client) => {
-                  const status = getStatusStyle(
-                    client.latest_status
-                  );
+                  const status = getStatusStyle(client.latest_status);
 
                   return (
                     <div
                       key={client.id}
-                      className="rounded-[28px] border border-slate-200 p-6 transition hover:shadow-sm"
+                      className="rounded-[28px] border border-slate-200 p-6"
                     >
-                      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                        <div>
-                          <div className="flex items-center gap-3">
-                            <h3 className="text-lg font-semibold text-slate-950">
-                              {client.full_name}
-                            </h3>
+                      <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                          <div>
+                            <div className="flex items-center gap-3">
+                              <h3 className="text-lg font-semibold text-slate-950">
+                                {client.full_name}
+                              </h3>
 
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-medium ${status.className}`}
-                            >
-                              {status.label}
-                            </span>
-                          </div>
+                              <span
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${status.className}`}
+                              >
+                                {status.label}
+                              </span>
+                            </div>
 
-                          <p className="mt-2 text-sm text-slate-700">
-                            {client.fitness_goal || "No fitness goal added"}
-                          </p>
+                            <p className="mt-2 text-sm text-slate-600">
+                              {client.fitness_goal || "No goal added"}
+                            </p>
 
-                          <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-500">
-                            <span>{client.phone}</span>
-                            <span>•</span>
-                            <span>
+                            <p className="mt-2 text-sm text-slate-500">
                               Last Reply: {client.latest_response}
-                            </span>
-                            <span>•</span>
-                            <span>
-                              Check-in: {client.checkin_time || "Not set"}
-                            </span>
+                            </p>
                           </div>
-                        </div>
 
-                        <div className="flex flex-wrap gap-3">
-                          <button
-                            onClick={() =>
-                              handleSendSMS(
-                                client.phone,
-                                client.full_name
-                              )
-                            }
-                            disabled={sendingSMS === client.phone}
-                            className="rounded-2xl border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-900 transition hover:shadow-sm"
-                          >
-                            {sendingSMS === client.phone
-                              ? "Sending..."
-                              : "Send SMS"}
-                          </button>
+                          <div className="flex flex-wrap gap-3">
+                            <button
+                              onClick={() =>
+                                handleSendWhatsApp(
+                                  client.phone,
+                                  client.full_name
+                                )
+                              }
+                              className="rounded-2xl bg-slate-950 px-5 py-2.5 text-sm font-medium text-white"
+                            >
+                              {sendingWhatsApp === client.phone
+                                ? "Sending..."
+                                : "Send WhatsApp"}
+                            </button>
 
-                          <button
-                            onClick={() =>
-                              handleSendWhatsApp(
-                                client.phone,
-                                client.full_name
-                              )
-                            }
-                            disabled={
-                              sendingWhatsApp === client.phone
-                            }
-                            className="rounded-2xl bg-slate-950 px-5 py-2.5 text-sm font-medium text-white transition hover:shadow-md"
-                          >
-                            {sendingWhatsApp === client.phone
-                              ? "Sending..."
-                              : "Send WhatsApp"}
-                          </button>
+                            <button
+                              onClick={() =>
+                                handleSendSMS(
+                                  client.phone,
+                                  client.full_name
+                                )
+                              }
+                              className="rounded-2xl border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-900"
+                            >
+                              {sendingSMS === client.phone
+                                ? "Sending..."
+                                : "Send SMS"}
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                handleRecoveryFlow(
+                                  client.phone,
+                                  client.full_name,
+                                  client.latest_status || "at_risk"
+                                )
+                              }
+                              className="rounded-2xl bg-red-600 px-5 py-2.5 text-sm font-medium text-white"
+                            >
+                              {triggeringRecovery === client.phone
+                                ? "Triggering..."
+                                : "Trigger Recovery Flow"}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -336,29 +357,32 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* RIGHT PANEL */}
           <div className="space-y-6">
             <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
               <h3 className="text-xl font-semibold text-slate-950">
-                Recovery Actions
+                AI Recovery Recommendations
               </h3>
 
               <div className="mt-5 space-y-4">
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <p className="text-sm font-medium text-slate-900">
-                    Immediate follow-up recommended for at-risk clients
+                <div className="rounded-2xl border border-red-100 bg-red-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">
+                    High Priority Intervention
                   </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Personal outreach within 24h improves retention
+
+                  <p className="mt-2 text-sm text-slate-600">
+                    At-risk clients should receive personal follow-up
+                    within 24 hours to maximize recovery.
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <p className="text-sm font-medium text-slate-900">
-                    Warning clients need motivational recovery flow
+                <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">
+                    Warning State Recovery
                   </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    WhatsApp recovery message recommended
+
+                  <p className="mt-2 text-sm text-slate-600">
+                    SKIPPED and NO TIME replies should trigger
+                    motivation recovery flows immediately.
                   </p>
                 </div>
               </div>
@@ -366,13 +390,12 @@ export default function DashboardPage() {
 
             <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
               <h3 className="text-xl font-semibold text-slate-950">
-                AI Retention Insight
+                Revenue Protection Opportunity
               </h3>
 
               <p className="mt-4 text-sm leading-relaxed text-slate-600">
-                Clients who miss 2 check-ins in 7 days are 4x more
-                likely to churn. Personal follow-up within 24 hours
-                significantly improves recovery rates.
+                Recovering just 2 at-risk clients/month can protect
+                $500–$1500+ in recurring revenue.
               </p>
             </div>
           </div>
