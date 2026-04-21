@@ -1,7 +1,89 @@
+"use client";
+
+import { useState } from "react";
+
 export default function VeyroLandingPage() {
-  const showDemoModal = false;
+  const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
+    businessType: "",
+    monthlyClients: "",
+    retentionProblem: "",
+  });
+
+  const [submitting, setSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      setSubmitting(true);
+
+      const response = await fetch("/api/demo-leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(result.message || "Failed to save lead");
+        setSubmitting(false);
+        return;
+      }
+
+      setShowSuccessModal(true);
+
+      setFormData({
+        fullName: "",
+        phone: "",
+        businessType: "",
+        monthlyClients: "",
+        retentionProblem: "",
+      });
+
+      setSubmitting(false);
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong");
+      setSubmitting(false);
+    }
+  };
   return (
     <main className="min-h-screen bg-[#F7F8FA] text-slate-900">
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-[32px] border border-slate-200 bg-white p-8 shadow-2xl">
+            <div className="text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-3xl">✨</div>
+              <h2 className="mt-6 text-2xl font-semibold text-slate-950">Demo Call Booked</h2>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                Your Veyro strategy demo request has been received successfully. Our team will contact you shortly to schedule your personalized walkthrough.
+              </p>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="mt-8 w-full rounded-2xl bg-slate-950 px-6 py-4 text-sm font-medium text-white shadow-sm transition hover:shadow-md"
+              >
+                Perfect, Continue
+              </button>
+            </div>
+          </div>
+        </div>
+            )}
+
       <section className="mx-auto max-w-7xl px-6 py-20 md:px-10">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
@@ -17,12 +99,12 @@ export default function VeyroLandingPage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
-              <button className="rounded-2xl bg-slate-950 px-7 py-4 text-sm font-medium text-white shadow-sm transition hover:shadow-md">
+              <a href="#demo-form" className="inline-flex rounded-2xl bg-slate-950 px-7 py-4 text-sm font-medium text-white shadow-sm transition hover:shadow-md">
                 Book Demo
-              </button>
-              <button className="rounded-2xl border border-slate-300 bg-white px-7 py-4 text-sm font-medium text-slate-900 transition hover:shadow-sm">
+              </a>
+              <a href="/dashboard" className="inline-flex rounded-2xl border border-slate-300 bg-white px-7 py-4 text-sm font-medium text-slate-900 transition hover:shadow-sm">
                 Watch Product Tour
-              </button>
+              </a>
             </div>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-3">
@@ -102,9 +184,9 @@ export default function VeyroLandingPage() {
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
-            <button className="rounded-2xl bg-slate-950 px-7 py-4 text-sm font-medium text-white shadow-sm transition hover:shadow-md">
+            <a href="#demo-form" className="inline-flex rounded-2xl bg-slate-950 px-7 py-4 text-sm font-medium text-white shadow-sm transition hover:shadow-md">
               Book Free Demo
-            </button>
+            </a>
             <button className="rounded-2xl border border-slate-300 bg-white px-7 py-4 text-sm font-medium text-slate-900 transition hover:shadow-sm">
               See Revenue Recovery
             </button>
@@ -112,7 +194,7 @@ export default function VeyroLandingPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 pb-24 md:px-10">
+      <section id="demo-form" className="mx-auto max-w-7xl px-6 pb-24 md:px-10">
         <div className="rounded-[32px] border border-slate-200 bg-white p-10 shadow-sm">
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
             <div>
@@ -128,39 +210,54 @@ export default function VeyroLandingPage() {
               </p>
             </div>
 
-            <form className="space-y-4 rounded-[28px] border border-slate-200 p-6">
+            <form onSubmit={handleSubmit} className="space-y-4 rounded-[28px] border border-slate-200 p-6">
               <input
                 type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
                 placeholder="Full Name"
                 className="w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm outline-none"
               />
 
               <input
                 type="text"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
                 placeholder="Phone Number"
                 className="w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm outline-none"
               />
 
               <input
                 type="text"
+                name="businessType"
+                value={formData.businessType}
+                onChange={handleChange}
                 placeholder="Business Type (Online Coach / Gym / Trainer)"
                 className="w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm outline-none"
               />
 
               <input
                 type="text"
+                name="monthlyClients"
+                value={formData.monthlyClients}
+                onChange={handleChange}
                 placeholder="Monthly Active Clients"
                 className="w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm outline-none"
               />
 
               <textarea
+                name="retentionProblem"
+                value={formData.retentionProblem}
+                onChange={handleChange}
                 placeholder="Biggest client retention problem"
                 rows={4}
                 className="w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm outline-none"
               />
 
               <button className="w-full rounded-2xl bg-slate-950 px-7 py-4 text-sm font-medium text-white shadow-sm transition hover:shadow-md">
-                Book Free Demo Call
+                {submitting ? "Submitting..." : "Book Free Demo Call"}
               </button>
             </form>
           </div>
