@@ -18,7 +18,33 @@ export async function sendCheckinSMS(
 
     return message;
   } catch (error) {
-    console.error("Twilio Error:", error);
+    console.error("Twilio SMS Error:", error);
+    throw error;
+  }
+}
+
+export async function sendCheckinWhatsApp(
+  to: string,
+  clientName: string
+) {
+  try {
+    const message = await client.messages.create({
+      body: `Hey ${clientName} 👋
+
+Did you complete today's workout?
+
+Reply with:
+
+DONE
+SKIPPED
+NO TIME`,
+      from: process.env.TWILIO_WHATSAPP_NUMBER!,
+      to,
+    });
+
+    return message;
+  } catch (error) {
+    console.error("Twilio WhatsApp Error:", error);
     throw error;
   }
 }
