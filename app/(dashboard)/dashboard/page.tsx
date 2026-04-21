@@ -15,7 +15,8 @@ type Client = {
 export default function DashboardPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sendingTo, setSendingTo] = useState<string | null>(null);
+  const [sendingSMS, setSendingSMS] = useState<string | null>(null);
+  const [sendingWhatsApp, setSendingWhatsApp] = useState<string | null>(null);
 
   useEffect(() => {
     fetchClients();
@@ -28,7 +29,7 @@ export default function DashboardPage() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching clients:", error.message);
+      console.error(error.message);
       setLoading(false);
       return;
     }
@@ -37,12 +38,12 @@ export default function DashboardPage() {
     setLoading(false);
   };
 
-  const handleSendCheckin = async (
+  const handleSendSMS = async (
     phone: string,
     fullName: string
   ) => {
     try {
-      setSendingTo(phone);
+      setSendingSMS(phone);
 
       const response = await fetch("/api/twilio", {
         method: "POST",
@@ -59,26 +60,61 @@ export default function DashboardPage() {
 
       if (!response.ok) {
         alert(result.message || "Failed to send SMS");
-        setSendingTo(null);
+        setSendingSMS(null);
         return;
       }
 
-      alert(`Check-in sent successfully to ${fullName}`);
-      setSendingTo(null);
+      alert(`SMS sent to ${fullName}`);
+      setSendingSMS(null);
     } catch (error) {
       console.error(error);
-      alert("Something went wrong while sending SMS");
-      setSendingTo(null);
+      alert("Something went wrong");
+      setSendingSMS(null);
+    }
+  };
+
+  const handleSendWhatsApp = async (
+    phone: string,
+    fullName: string
+  ) => {
+    try {
+      setSendingWhatsApp(phone);
+
+      const response = await fetch("/api/whatsapp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: `whatsapp:${phone}`,
+          fullName,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(result.message || "Failed to send WhatsApp");
+        setSendingWhatsApp(null);
+        return;
+      }
+
+      alert(`WhatsApp sent to ${fullName}`);
+      setSendingWhatsApp(null);
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong");
+      setSendingWhatsApp(null);
     }
   };
 
   return (
     <main className="min-h-screen bg-[#F7F8FA] text-slate-900">
-      <div className="mx-auto max-w-7xl px-8 py-8 space-y-8">
+      <div className="mx-auto max-w-7xl space-y-8 px-8 py-8">
         <header className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold tracking-wide text-slate-500 uppercase">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
                 Veyro
               </p>
 
@@ -87,8 +123,7 @@ export default function DashboardPage() {
               </h1>
 
               <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-600">
-                Reduce client drop-offs before they happen with accountability,
-                check-ins, and retention intelligence.
+                Multi-channel client retention system for fitness coaches.
               </p>
             </div>
 
@@ -98,157 +133,77 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            {
-              title: "Total Clients",
-              value: clients.length || 0,
-              meta: "Active accounts",
-            },
-            {
-              title: "Today's Check-ins",
-              value: "31",
-              meta: "74% completion",
-            },
-            {
-              title: "At-Risk Clients",
-              value: "4",
-              meta: "Needs attention",
-            },
-            {
-              title: "Weekly Compliance",
-              value: "84%",
-              meta: "Strong retention",
-            },
-          ].map((card) => (
-            <div
-              key={card.title}
-              className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm"
-            >
-              <p className="text-sm font-medium text-slate-500">
-                {card.title}
-              </p>
+        <section className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-950">
+              Client Retention Center
+            </h2>
 
-              <h2 className="mt-4 text-3xl font-semibold text-slate-950">
-                {card.value}
-              </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Send SMS and WhatsApp accountability check-ins instantly
+            </p>
+          </div>
 
-              <p className="mt-2 text-sm text-slate-600">
-                {card.meta}
-              </p>
-            </div>
-          ))}
-        </section>
+          {loading ? (
+            <p>Loading clients...</p>
+          ) : clients.length === 0 ? (
+            <p>No clients added yet.</p>
+          ) : (
+            clients.map((client) => (
+              <div
+                key={client.id}
+                className="rounded-3xl border border-slate-200 p-5"
+              >
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-950">
+                      {client.full_name}
+                    </h3>
 
-        <section className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-950">
-                  Client Activity
-                </h2>
+                    <p className="mt-1 text-sm text-slate-700">
+                      {client.fitness_goal || "No fitness goal added"}
+                    </p>
 
-                <p className="mt-1 text-sm text-slate-600">
-                  Live accountability overview for all active clients
-                </p>
-              </div>
-
-              <button className="text-sm font-medium text-slate-700">
-                View all
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {loading ? (
-                <p className="text-slate-600">Loading clients...</p>
-              ) : clients.length === 0 ? (
-                <p className="text-slate-600">
-                  No clients added yet.
-                </p>
-              ) : (
-                clients.map((client) => (
-                  <div
-                    key={client.id}
-                    className="rounded-3xl border border-slate-200 p-5 transition hover:shadow-sm"
-                  >
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-slate-950">
-                          {client.full_name}
-                        </h3>
-
-                        <p className="mt-1 text-sm text-slate-700">
-                          {client.fitness_goal || "No fitness goal added"}
-                        </p>
-
-                        <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-500">
-                          <span>Phone: {client.phone}</span>
-                          <span>•</span>
-                          <span>
-                            Check-in:{" "}
-                            {client.checkin_time || "Not set"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
-                          Active
-                        </span>
-
-                        <button
-                          onClick={() =>
-                            handleSendCheckin(
-                              client.phone,
-                              client.full_name
-                            )
-                          }
-                          disabled={sendingTo === client.phone}
-                          className="rounded-2xl border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-900 transition hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {sendingTo === client.phone
-                            ? "Sending..."
-                            : "Send Check-in"}
-                        </button>
-                      </div>
-                    </div>
+                    <p className="mt-2 text-sm text-slate-500">
+                      {client.phone}
+                    </p>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
 
-          <div className="space-y-6">
-            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-slate-950">
-                Revenue Protection
-              </h3>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() =>
+                        handleSendSMS(
+                          client.phone,
+                          client.full_name
+                        )
+                      }
+                      disabled={sendingSMS === client.phone}
+                      className="rounded-2xl border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-900 transition hover:shadow-sm"
+                    >
+                      {sendingSMS === client.phone
+                        ? "Sending SMS..."
+                        : "Send SMS"}
+                    </button>
 
-              <p className="mt-3 text-sm text-slate-600">
-                Clients recovered this month
-              </p>
-
-              <p className="mt-4 text-4xl font-semibold text-slate-950">
-                11
-              </p>
-            </div>
-
-            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-slate-950">
-                High-Risk Alerts
-              </h3>
-
-              <div className="mt-4 space-y-3">
-                <div className="rounded-2xl border border-slate-200 p-4 text-sm text-slate-700">
-                  Michael missed 2 check-ins this week
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 p-4 text-sm text-slate-700">
-                  Sarah streak recovered after coach follow-up
+                    <button
+                      onClick={() =>
+                        handleSendWhatsApp(
+                          client.phone,
+                          client.full_name
+                        )
+                      }
+                      disabled={sendingWhatsApp === client.phone}
+                      className="rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:shadow-md"
+                    >
+                      {sendingWhatsApp === client.phone
+                        ? "Sending WhatsApp..."
+                        : "Send WhatsApp"}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            ))
+          )}
         </section>
       </div>
     </main>

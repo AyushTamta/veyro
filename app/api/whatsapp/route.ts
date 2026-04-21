@@ -1,24 +1,37 @@
 import { NextResponse } from "next/server";
 import { sendCheckinWhatsApp } from "@/lib/twilio";
 
-export async function GET() {
+export async function POST(req: Request) {
   try {
+    const body = await req.json();
+    const { phone, fullName } = body;
+
+    if (!phone || !fullName) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Missing phone or client name",
+        },
+        { status: 400 }
+      );
+    }
+
     await sendCheckinWhatsApp(
-      process.env.YOUR_WHATSAPP_NUMBER!,
-      "Test Client"
+      phone,
+      fullName
     );
 
     return NextResponse.json({
       success: true,
-      message: "WhatsApp message sent successfully",
+      message: "WhatsApp sent successfully",
     });
   } catch (error: any) {
-    console.error(error);
+    console.error("WhatsApp Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        message: error.message || "Failed to send WhatsApp",
       },
       { status: 500 }
     );
