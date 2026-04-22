@@ -2,24 +2,43 @@ export async function POST(req: Request) {
     try {
       const formData = await req.formData();
   
-      const from = formData.get("From");
-      const body = formData.get("Body");
-      const profileName = formData.get("ProfileName");
+      const from = String(formData.get("From") || "");
+      const body = String(formData.get("Body") || "").trim().toUpperCase();
+      const profileName = String(formData.get("ProfileName") || "Client");
   
-      console.log("Incoming WhatsApp Reply:");
-      console.log({
+      console.log("Incoming WhatsApp Reply:", {
         from,
         body,
         profileName,
       });
   
-      // Future AI logic goes here
+      let replyMessage = "";
+  
+      if (body === "DONE") {
+        replyMessage = `Amazing work 🔥
+  
+  Consistency builds real results.
+  
+  Keep going strong for tomorrow 💪`;
+      }
+  
+      else if (body === "MISSED") {
+        replyMessage = `That’s okay — one missed day doesn’t define your journey.
+  
+  Let’s reset tomorrow and get back on track 💪`;
+      }
+  
+      else {
+        replyMessage = `Totally understandable — busy days happen.
+  
+  What matters most is getting back quickly, not being perfect.
+  
+  Let’s aim for a strong comeback tomorrow 🚀`;
+      }
   
       const twimlResponse = `
         <Response>
-          <Message>
-            Got it! Your check-in has been recorded ✅
-          </Message>
+          <Message>${replyMessage}</Message>
         </Response>
       `;
   
