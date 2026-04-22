@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import PricingSection from "@/components/PricingSection";
 
 export default function VeyroLandingPage() {
   const [formData, setFormData] = useState({
@@ -172,7 +173,7 @@ export default function VeyroLandingPage() {
               {[
                 ["4x", "Higher recovery rate"],
                 ["91%", "Check-in completion"],
-                ["$1.5k+", "Revenue protected / month"],
+                ["₹1.5L+", "Revenue protected / month"],
               ].map(([value, label]) => (
                 <div
                   key={label}
@@ -241,74 +242,7 @@ export default function VeyroLandingPage() {
       </section>
 
       {/* PRICING SECTION */}
-      <section
-        id="pricing"
-        className="mx-auto max-w-7xl px-6 py-24 md:px-10"
-      >
-        <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">
-            PRICING
-          </p>
-
-          <h2 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950 md:text-5xl">
-            Simple pricing built for serious coaches
-          </h2>
-
-          <p className="mt-4 text-base text-slate-700">
-            Choose the right retention system for your coaching business.
-          </p>
-        </div>
-
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {[
-            [
-              "Starter",
-              "$99/mo",
-              "Perfect for solo coaches",
-              "/signup",
-              "Sign Up For Free",
-            ],
-            [
-              "Growth",
-              "$149/mo",
-              "Best for premium fitness coaches",
-              "#demo-form",
-              "Book Demo",
-            ],
-            [
-              "Elite",
-              "$299+/mo",
-              "Done-for-you retention operations",
-              "#demo-form",
-              "Book Strategy Call",
-            ],
-          ].map(([title, price, desc, link, cta]) => (
-            <div
-              key={title}
-              className="rounded-[32px] border border-slate-300 bg-white p-8 shadow-sm"
-            >
-              <h3 className="text-2xl font-semibold text-slate-950">
-                {title}
-              </h3>
-
-              <p className="mt-4 text-4xl font-semibold text-slate-950">
-                {price}
-              </p>
-
-              <p className="mt-4 text-sm leading-relaxed text-slate-700">
-                {desc}
-              </p>
-
-              <a
-                href={link}
-                className="mt-8 inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-6 py-4 text-sm font-medium text-white"
-              >
-                {cta}
-              </a>
-            </div>
-          ))}
-        </div>
-      </section>
+      <PricingSection />
 
       {/* DEMO FORM */}
       <section
@@ -328,7 +262,8 @@ export default function VeyroLandingPage() {
 
               <p className="mt-6 text-lg leading-relaxed text-slate-700">
                 See how Veyro helps fitness coaches reduce churn, improve
-                accountability, and automate retention.
+                accountability, and automate retention without spending hours
+                chasing clients manually.
               </p>
             </div>
 
