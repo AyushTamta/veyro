@@ -33,7 +33,7 @@ DONE ✅
 or
 MISSED ❌
 
-– Team Veyro`;
+– Ayush from Veyro`;
 
     const response = await client.messages.create({
       from: process.env.TWILIO_WHATSAPP_NUMBER,
