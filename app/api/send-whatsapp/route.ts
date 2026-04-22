@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import twilio from "twilio";
 
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID!,
-  process.env.TWILIO_AUTH_TOKEN!
-);
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -22,13 +17,16 @@ export async function POST(req: Request) {
       );
     }
 
+    const client = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+
     const finalMessage =
       message ||
       `Hey ${clientName || "there"} 👋
-
-Just checking in on your workout progress today.
-
-Did you complete your workout?
+      
+Did you complete your workout today?
 
 Reply:
 DONE ✅
@@ -38,23 +36,22 @@ MISSED ❌
 – Team Veyro`;
 
     const response = await client.messages.create({
-      from: process.env.TWILIO_WHATSAPP_NUMBER!,
+      from: process.env.TWILIO_WHATSAPP_NUMBER,
       to: `whatsapp:${phone}`,
       body: finalMessage,
     });
 
     return NextResponse.json({
       success: true,
-      message: "WhatsApp sent successfully",
       sid: response.sid,
     });
   } catch (error: any) {
-    console.error("WhatsApp Error:", error);
+    console.error("TWILIO ERROR:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: error.message || "Failed to send WhatsApp",
+        message: error.message || "Something went wrong",
       },
       { status: 500 }
     );
